@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Toolbar from "@material-ui/core/Toolbar";
 import IconButton from "@material-ui/core/IconButton";
@@ -10,6 +10,12 @@ import MoreIcon from "@material-ui/icons/MoreVert";
 import { ethers } from "ethers";
 import Chip from "@material-ui/core/Chip";
 import Paper from "@material-ui/core/Paper";
+import Snackbar from "@material-ui/core/Snackbar";
+import MuiAlert from "@material-ui/lab/Alert";
+
+function Alert(props) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -62,10 +68,28 @@ export default function Header() {
   const [networkName, setNetworkName] = React.useState("");
   const [tokenhodl, setTokenhodl] = React.useState(0);
   // const [tokenname, setTokenname] = React.useState("");
+  const [state, setState] = React.useState({
+    open: false,
+    vertical: "top",
+    horizontal: "center",
+  });
+
+  const { vertical, horizontal, open } = state;
+
+  const handleClick = (newState) => () => {
+    setState({ open: true, ...newState });
+  };
+
+  const handleClose = () => {
+    setState({ ...state, open: false });
+  };
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
+  useEffect(() => {
+    connectMetamask();
+  });
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -84,16 +108,6 @@ export default function Header() {
   };
 
   const connectMetamask = async () => {
-    // if (window.ethereum) {
-    //   await window.ethereum.enable();
-    //   const provider = new ethers.providers.Web3Provider(window.ethereum);
-    //   const signer = provider.getSigner();
-    //   console.log(provider.listAccounts);
-    //   const balance = await provider.getBalance(
-    //     "0xc3fb14F8D257c531861E9dC49416FdB9c0b47442"
-    //   );
-    //   console.log(ethers.utils.formatEther(balance));
-    // }
     if (window.ethereum) {
       await window.ethereum.enable();
       const provider = new ethers.providers.Web3Provider(
@@ -105,7 +119,8 @@ export default function Header() {
       const signer = provider.getSigner();
       const addr = await signer.getAddress();
 
-      console.log(addrButton, await (await provider.getNetwork()).name);
+      // console.log(addrButton, await (await provider.getNetwork()).name);
+      setNetworkName(await (await provider.getNetwork()).name);
       //Get balance of address
       const balance = await provider.getBalance(addr);
       console.log(
@@ -114,14 +129,6 @@ export default function Header() {
         " Balance : ",
         ethers.utils.formatEther(balance)
       );
-      // const web3 = new Web3(window.ethereum);
-      // var tokenContract = new web3.eth.Contract(ERCToken).at(
-      //   "0x4c6ec08cf3fc987c6c4beb03184d335a2dfc4042"
-      // );
-      // var decimal = tokenContract.decimals();
-      // var bal = tokenContract.balanceOf(addr);
-      // var adjustedBalance = bal / Math.pow(10, decimal);
-      // console.log(adjustedBalance);
 
       // You can also use an ENS name for the contract address
       const daiAddress = "0x35cce2f5cd6f9b6398a0f0fb355320538ff7c16a";
@@ -144,43 +151,39 @@ export default function Header() {
       ];
 
       // The Contract object
-      const daiContract = new ethers.Contract(daiAddress, daiAbi, provider);
 
-      await daiContract.name();
-      // 'Dai Stablecoin'
+      console.log("network : " + networkName);
+      if (networkName === "rinkeby") {
+        const daiContract = new ethers.Contract(daiAddress, daiAbi, provider);
 
-      // Get the ERC-20 token symbol (for tickers and UIs)
-      let tokenSymbol = "";
-      if ((await daiContract.symbol()) != null) {
-        tokenSymbol = await daiContract.symbol();
-      }
-      // 'DAI'
+        await daiContract.name();
+        // 'Dai Stablecoin'
 
-      // Get the balance of an address
-      const balanceDai = await daiContract.balanceOf(addr);
-      // {
-      //   BigNumber: "1182338008374328791075";
-      // }
+        // Get the ERC-20 token symbol (for tickers and UIs)
+        let tokenSymbol = "";
+        if ((await daiContract.symbol()) != null) {
+          tokenSymbol = await daiContract.symbol();
+        }
 
-      // Format the DAI for displaying to the user
+        // Get the balance of an address
+        const balanceDai = await daiContract.balanceOf(addr);
 
-      // '1182.338008374328791075'
-
-      console.log(ethers.utils.formatUnits(balanceDai, 18));
-      let currentBalance = 0;
-      if (ethers.utils.formatUnits(balanceDai, 18) != null) {
-        currentBalance = ethers.utils.formatUnits(balanceDai, 18);
-      }
-      // var tokenName = tokenContract.name()
-      // var tokenSymbol = tokenContract.symbol()
-      if (addr != null) {
-        setAddrButton(1);
-        setNetworkName(await (await provider.getNetwork()).name);
-        const updatedaddress = addr.substr(0, 4).concat("...");
-        setUpdatedaddr(updatedaddress.concat(addr.substr(38, 4)));
-        const currtokens = currentBalance.concat(" $");
-        setTokenhodl(currtokens.concat(tokenSymbol));
-        // setTokenname("$".concat(tokenSymbol));
+        console.log(ethers.utils.formatUnits(balanceDai, 18));
+        let currentBalance = 0;
+        if (ethers.utils.formatUnits(balanceDai, 18) != null) {
+          currentBalance = ethers.utils.formatUnits(balanceDai, 18);
+        }
+        // var tokenName = tokenContract.name()
+        // var tokenSymbol = tokenContract.symbol()
+        if (addr != null) {
+          setAddrButton(1);
+          // setNetworkName(await (await provider.getNetwork()).name);
+          const updatedaddress = addr.substr(0, 4).concat("...");
+          setUpdatedaddr(updatedaddress.concat(addr.substr(38, 4)));
+          const currtokens = currentBalance.concat(" $");
+          setTokenhodl(currtokens.concat(tokenSymbol));
+          // setTokenname("$".concat(tokenSymbol));
+        }
       }
     }
   };
@@ -212,22 +215,6 @@ export default function Header() {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      {/* <MenuItem>
-        <IconButton aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="secondary">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <p>Messages</p>
-      </MenuItem>
-      <MenuItem>
-        <IconButton aria-label="show 11 new notifications" color="inherit">
-          <Badge badgeContent={11} color="secondary">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-        <p>Notifications</p>
-      </MenuItem> */}
       <MenuItem onClick={handleProfileMenuOpen}>
         <IconButton
           aria-label="account of current user"
@@ -300,65 +287,6 @@ export default function Header() {
   );
 
   return (
-    // <div className={classes.grow}>
-    //   {/* <Login /> */}
-    //   <AppBar position="static">
-    //     <Toolbar>
-    //       <Typography className={classes.title} variant="h6" noWrap>
-    //         W$U
-    //       </Typography>
-
-    //       <div className={classes.grow} />
-    //       <div className={classes.sectionDesktop}>
-    //         <IconButton aria-label="show 4 new mails" color="inherit">
-    //           <Badge badgeContent={4} color="secondary">
-    //             <MailIcon />
-    //           </Badge>
-    //         </IconButton>
-    //         <IconButton aria-label="show 17 new notifications" color="inherit">
-    //           <Badge badgeContent={17} color="secondary">
-    //             <NotificationsIcon />
-    //           </Badge>
-    //         </IconButton>
-    //         <IconButton
-    //           edge="end"
-    //           aria-label="account of current user"
-    //           aria-controls={menuId}
-    //           aria-haspopup="true"
-    //           onClick={handleProfileMenuOpen}
-    //           color="inherit"
-    //         >
-    //           <AccountCircle />
-    //         </IconButton>
-    //         <Chip
-    //           icon={<FaceIcon />}
-    //           label="NFT Support"
-    //           color="secondary"
-    //           variant="outlined"
-    //         />
-    //         <button className="login-button" onClick={connectMetamask}>
-    //           Metamask
-    //         </button>
-    //       </div>
-    //       <div className={classes.sectionMobile}>
-    //         <IconButton
-    //           aria-label="show more"
-    //           aria-controls={mobileMenuId}
-    //           aria-haspopup="true"
-    //           onClick={handleMobileMenuOpen}
-    //           color="inherit"
-    //         >
-    //           <MoreIcon />
-    //         </IconButton>
-    //       </div>
-    //     </Toolbar>
-    //   </AppBar>
-    //   {renderMobileMenu}
-    //   {renderMenu}
-    //   <button className="login-button" onClick={connectMetamask}>
-    //     Metamask
-    //   </button>
-    // </div>
     <div className={classes.grow}>
       <Paper class="headerColor" elevation={3}>
         <Toolbar>
@@ -388,6 +316,57 @@ export default function Header() {
           <AccountCircle />
         </IconButton> */}
             {(() => {
+              if (!(networkName === "rinkeby")) {
+                return (
+                  <div>
+                    <MenuItem>
+                      <Chip
+                        // icon={<FaceIcon />}
+                        align="center"
+                        label="Wrong Network"
+                        color="primary"
+                        variant="outlined"
+                      />
+                      &nbsp;
+                      <Chip
+                        // icon={<FaceIcon />}
+                        align="center"
+                        label="Connect"
+                        color="secondary"
+                        // variant="outlined"
+                        // onClick={connectMetamask}
+                        onClick={
+                          (connectMetamask,
+                          handleClick({
+                            vertical: "top",
+                            horizontal: "center",
+                          }))
+                        }
+                      />
+                    </MenuItem>
+                    {/* <Snackbar
+                      anchorOrigin={{ vertical, horizontal }}
+                      open={open}
+                      onClose={handleClose}
+                      message="Please connect to Rinkeby Network"
+                      key={vertical + horizontal}
+                    /> */}
+                    <Snackbar
+                      anchorOrigin={{ vertical, horizontal }}
+                      open={open}
+                      autoHideDuration={6000}
+                      onClose={handleClose}
+                    >
+                      <Alert onClose={handleClose} severity="warning">
+                        Please connect to rinkeby network!
+                      </Alert>
+                    </Snackbar>
+                    {/* <Alert severity="info">
+                      This is an information message!
+                    </Alert> */}
+                  </div>
+                );
+              }
               if (addrButton === 0) {
                 return (
                   <Chip
@@ -408,21 +387,6 @@ export default function Header() {
                       label={networkName}
                     />{" "}
                     &nbsp;
-                    {/* <ButtonGroup
-                      color="secondary"
-                      aria-label="outlined secondary button group"
-                    >
-                      <Button>
-                        <Chip
-                          // icon={<FaceIcon />}
-                          align="center"
-                          label={tokenhodl}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </Button>
-                      <Button></Button>
-                    </ButtonGroup> */}
                     <Chip
                       // icon={<FaceIcon />}
                       align="center"
@@ -442,9 +406,6 @@ export default function Header() {
                 );
               }
             })()}
-            {/* <button className="login-button" onClick={connectMetamask}>
-          Metamask
-        </button> */}
           </div>
           <div className={classes.sectionMobile}>
             <IconButton
