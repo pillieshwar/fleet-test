@@ -1,12 +1,12 @@
 // import logo from "./logo.svg";
 import "./App.css";
-// import Frontpage from "./dashboard/Frontpage";
+import Frontpage from "./dashboard/Frontpage";
 import Header from "./dashboard/Header";
 function App() {
   return (
     <div className="App">
       <Header />
-      {/* <Frontpage /> */}
+      <Frontpage />
       {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
